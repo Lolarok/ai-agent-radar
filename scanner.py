@@ -310,7 +310,7 @@ def main():
     # Sector summary
     print(f"\n  {'Sector':<12} {'Count':>6} {'Avg Score':>10} {'Avg 24h':>10}", file=sys.stderr)
     print(f"  {'─'*10} {'─'*4} {'─'*9} {'─'*8}")
-    for s, d in sorted(sector_summary.items(), key=lambda x: x[1]["avg_score"], reverse=True):
+    for s, d in sorted(result["sector_summary"].items(), key=lambda x: x[1]["avg_score"], reverse=True):
         print(f"  {s:<12} {d['count']:>6} {d['avg_score']:>9.1f} {d['avg_change_24h']:>+9.1f}%", file=sys.stderr)
 
     print(f"\n✅ Done. {len(result['tokens'])} tokens scored.\n", file=sys.stderr)
