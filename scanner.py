@@ -200,18 +200,29 @@ def compute_score(t: dict) -> tuple[float, str]:
 
 
 # ─── Main ────────────────────────────────────────────────────────────────────
+def main():
+    try:
+        config = load_config()
+        print(f"✅ Config loaded — {len(config.get('coingecko_ids', []))} tokens", file=sys.stderr)
+    except Exception as e:
+        print(f"❌ Failed to load config: {e}", file=sys.stderr)
+        sys.exit(1)
 
-def load_config() -> dict:
-    """Load config from config.json."""
-    config_path = Path(__file__).parent / "config.json"
-    with open(config_path) as f:
-        return json.load(f)
+    try:
+        result = scan(config)
+
+        # Write JSON
+        output_path = Path(__file__).parent / "public" / "ai-agents.json"
+        output_path.parent.mkdir(exist_ok=True)
+        with open(output_path, "w") as f:
+            json.dump(result, f, indent=2)
+        print(f"✅ JSON written to {output_path}", file=sys.stderr)
+        
+    except Exception as e:
+        print(f"❌ Error during scan: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
-def scan(config: dict) -> list[dict]:
-    """Run full scan and return scored token data."""
-    coin_ids = config.get("coingecko_ids", [])
-    print(f"\n🤖 AI Agent Crypto Radar — Scanning {len(coin_ids)} tokens...", file=sys.stderr)
 
     # 1. Fetch market data
     data = fetch_agents(coin_ids)
@@ -318,4 +329,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+Add error handling to scanner.py
