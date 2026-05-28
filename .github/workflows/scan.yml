@@ -27,8 +27,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Run scanner
-        run: python3 scanner.py
+      - - name: Run scanner
+        run: |
+          set -e
+          python3 scanner.py
+        shell: bash
+        
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
