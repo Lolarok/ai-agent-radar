@@ -200,113 +200,8 @@ def compute_score(t: dict) -> tuple[float, str]:
 
 
 # ─── Main ────────────────────────────────────────────────────────────────────
-def main():
-    try:
-        config = load_config()
-        print(f"✅ Config loaded — {len(config.get('coingecko_ids', []))} tokens", file=sys.stderr)
-    except Exception as e:
-        print(f"❌ Failed to load config: {e}", file=sys.stderr)
-        sys.exit(1)
 
-    try:
-        result = scan(config)
-
-        # Write JSON
-        output_path = Path(__file__).parent / "public" / "ai-agents.json"
-        output_path.parent.mkdir(exist_ok=True)
-        with open(output_path, "w") as f:
-            json.dump(result, f, indent=2)
-        print(f"✅ JSON written to {output_path}", file=sys.stderr)
-        
-    except Exception as e:
-        print(f"❌ Error during scan: {e}", file=sys.stderr)
-        sys.exit(1)
-
-
-
-    # 1. Fetch market data
-    data = fetch_agents(coin_ids)
-    if not data:
-        print("❌ No data returned from CoinGecko.", file=sys.stderr)
-        sys.exit(1)
-
-    print(f"  ✅ Received data for {len(data)} tokens", file=sys.stderr)
-
-    # 2. Build tokens
-    tokens = []
-    for t in data:
-        score, label = compute_score(t)
-        sector = detect_sector(t["id"])
-        tokens.append({
-            "id": t["id"],
-            "name": t["name"],
-            "symbol": t["symbol"].upper(),
-            "current_price": t.get("current_price"),
-            "market_cap": t.get("market_cap", 0),
-            "market_cap_rank": t.get("market_cap_rank"),
-            "total_volume": t.get("total_volume", 0),
-            "price_change_24h": round(t.get("price_change_24h") or 0, 2),
-            "price_change_percentage_24h": round(t.get("price_change_percentage_24h_in_currency") or 0, 2),
-            "price_change_percentage_7d": round(t.get("price_change_percentage_7d_in_currency") or 0, 2),
-            "price_change_percentage_30d": round(t.get("price_change_percentage_30d") or 0, 2),
-            "ath": t.get("ath"),
-            "ath_change_percentage": round(t.get("ath_change_percentage") or -99, 2),
-            "ath_date": (t.get("ath_date") or "")[:10],
-            "sector": sector,
-            "composite_score": score,
-            "score_label": label,
-        })
-
-    # 3. Sort by score descending
-    tokens.sort(key=lambda x: x["composite_score"], reverse=True)
-
-    # 4. DeFi TVL context
-    print("  Fetching DeFi TVL context...", file=sys.stderr)
-    defi_tvl = fetch_defi_tvl()
-
-    # 5. Sector summary
-    sector_summary = {}
-    for t in tokens:
-        s = t["sector"]
-        if s not in sector_summary:
-            sector_summary[s] = {"count": 0, "total_score": 0, "avg_change_24h": 0}
-        sector_summary[s]["count"] += 1
-        sector_summary[s]["total_score"] += t["composite_score"]
-        sector_summary[s]["avg_change_24h"] += t["price_change_percentage_24h"]
-
-    for s in sector_summary:
-        c = sector_summary[s]["count"]
-        sector_summary[s]["avg_score"] = round(sector_summary[s]["total_score"] / c, 1)
-        sector_summary[s]["avg_change_24h"] = round(sector_summary[s]["avg_change_24h"] / c, 2)
-
-    output = {
-        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "defi_tvl": defi_tvl,
-        "total_tokens": len(tokens),
-        "sector_summary": sector_summary,
-        "tokens": tokens,
-    }
-
-    return output
-
-
-def main():
-    config = load_config()
-    result = scan(config)
-
-    # Write JSON
-    output_path = Path(__file__).parent / "public" / "ai-agents.json"
-    output_path.parent.mkdir(exist_ok=True)
-    with open(output_path, "w") as f:
-        json.dump(result, f, indent=2)
-    print(f"\n✅ JSON written to {output_path}", file=sys.stderr)
-
-    # Print summary
-    print(f"\n{'='*60}", file=sys.stderr)
-    print(f"  🤖 AI AGENT CRYPTO RADAR — {result['timestamp']}", file=sys.stderr)
-    print(f"  Tokens tracked: {result['total_tokens']}", file=sys.stderr)
-    print(f"  DeFi TVL: ${result['defi_tvl']:,.0f}", file=sys.stderr)
-    print(f"{'='*60}\n", file=sys.stderr)
+     print(f"{'='*60}\n", file=sys.stderr)
 
     # Top 10
     print(f"  {'Rank':<5} {'Name':<20} {'Price':>12} {'24h':>8} {'7d':>8} {'Score':>6} {'Signal':<12}", file=sys.stderr)
@@ -330,3 +225,5 @@ def main():
 if __name__ == "__main__":
     main()
 Add error handling to scanner.py
+
+   
